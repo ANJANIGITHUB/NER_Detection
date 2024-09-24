@@ -45,7 +45,7 @@ def match_name_address(df: pd.DataFrame, user_name: str) -> pd.DataFrame:
         df['name_similarity'] = [similarity for _, similarity in results]
 
         # Filter records with a similarity score > 75%
-        filtered_df = df[df['name_similarity'] > 0.75]
+        filtered_df = df[df['name_similarity'] > 0.85]
 
         # Calculate the total execution time in minutes
         end_time = time.time()
@@ -83,7 +83,7 @@ def main():
                 st.dataframe(result_df[['name','name_similarity']].sort_values(by=['name_similarity'], ascending=False)[:2].reset_index(drop=True))
                 #result_df.sort_values(by=['name_similarity'], ascending=False)
             else:
-                st.write("No records found with a similarity score greater than 75%.")
+                st.write("Congratulations!! You are not part of any Sanctioned List.")
         else:
             st.error("Please provide Party Name/Org to match.")
 
