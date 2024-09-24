@@ -80,7 +80,7 @@ def main():
             result_df = match_name_address(df, user_name)
             if not result_df.empty:
                 st.write("Ooo... You Matched with one of the Sanctioned Entities.We may have to investigate more before doing business with you (score > 75%):")
-                st.dataframe(result_df.sort_values(by=['name_similarity'], ascending=False)[:2])
+                st.dataframe(result_df[['name','name_similarity']].sort_values(by=['name_similarity'], ascending=False)[:2].reset_index(drop=True))
                 #result_df.sort_values(by=['name_similarity'], ascending=False)
             else:
                 st.write("No records found with a similarity score greater than 75%.")
