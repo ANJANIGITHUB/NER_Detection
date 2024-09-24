@@ -69,7 +69,7 @@ def main():
     #st.image(logo, caption="Company Logo", width=700)
     st.image(logo, width=800)
 
-    st.subheader("Let's verify you are not part of sanction entities")
+    st.subheader("Let's verify if you are not part of sanction entities")
 
     df = pd.read_csv("Entity_data.csv")
 
@@ -79,8 +79,8 @@ def main():
         if user_name:
             result_df = match_name_address(df, user_name)
             if not result_df.empty:
-                st.write("Matching results (score > 75%):")
-                st.dataframe(result_df.sort_values(by=['name_similarity'], ascending=False)[:5])
+                st.write("Ooo... You Matched with one of the Sanctioned Entities.We may have to investigate more before doing business with you (score > 75%):")
+                st.dataframe(result_df.sort_values(by=['name_similarity'], ascending=False)[:2])
                 #result_df.sort_values(by=['name_similarity'], ascending=False)
             else:
                 st.write("No records found with a similarity score greater than 75%.")
