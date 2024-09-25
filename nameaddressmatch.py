@@ -27,15 +27,12 @@ def match_single_name(name: str, user_name: str) -> tuple:
     similarity = jaro_winkler_similarity(name, user_name)
     return name, similarity
 
-# Function to match name and address with the dataframe
+# Function to match name with the dataframe
 def match_name_address(df: pd.DataFrame, user_name: str) -> pd.DataFrame:
     try:
         if 'name' not in df.columns:
-            st.error("DataFrame must contain 'name' columns")
+            st.error("DataFrame must contain 'name' column")
             return pd.DataFrame()
-
-        # Start the timer before executing the multithreaded task
-        start_time = time.time()
 
         # Multithreading for faster similarity calculation
         with ThreadPoolExecutor() as executor:
@@ -44,19 +41,9 @@ def match_name_address(df: pd.DataFrame, user_name: str) -> pd.DataFrame:
         # Assign results back to the DataFrame
         df['name_similarity'] = [similarity for _, similarity in results]
 
-        # Filter records with a similarity score > 75%
+        # Filter records with a similarity score > 85%
         filtered_df = df[df['name_similarity'] > 0.85]
 
-        # Calculate the total execution time in minutes
-        end_time = time.time()
-        execution_time_seconds = (end_time - start_time) 
-
-        #Total Party Data to Search
-        #st.write(f"Total Data Searched is {len(df)/1000}K")
-
-        # Display the execution time
-        #st.write(f"Execution Time: {execution_time_seconds:.2f} Seconds")
-        
         return filtered_df[['name', 'name_similarity']]
 
     except Exception as e:
@@ -66,26 +53,46 @@ def match_name_address(df: pd.DataFrame, user_name: str) -> pd.DataFrame:
 # Streamlit app
 def main():
     logo = Image.open("minerva_logo.jpg")  # Replace with your logo path
-    #st.image(logo, caption="Company Logo", width=700)
     st.image(logo, width=800)
 
-    st.subheader("Let's verify if you are not part of sanction entities")
-
+    # Load entity data
     df = pd.read_csv("Entity_data.csv")
 
-    user_name = st.text_input("Enter Your Name:")
+    # Use session state to manage the name after save
+    if 'saved_name' not in st.session_state:
+        st.session_state.saved_name = ""
+    
+    st.subheader("Please Register Yourself")
+    # Input fields for name and APMID
+    name_input = st.text_input("Enter Your Name:")
+    apmid_input = st.text_input("Enter Your APMID:")
 
+    # Save button to register the name and APMID
+    if st.button("Save"):
+        if name_input and apmid_input:
+            # Save the name to session state
+            st.session_state.saved_name = name_input
+            st.success(f"Name '{name_input}' and APMID '{apmid_input}' saved!")
+
+    st.subheader("Let's verify if you are not part of sanctioned entities")
+
+    # Use the saved name to populate the "Enter Your Name" field
+    user_name = st.text_input("Your Name for Matching:", value=st.session_state.saved_name)
+
+    # Reset the saved name after the match
     if st.button("Match"):
         if user_name:
             result_df = match_name_address(df, user_name)
             if not result_df.empty:
-                st.write("Ooo... You Matched with one of the Sanctioned Entities.We may have to investigate more before doing business with you (score > 75%):")
-                st.dataframe(result_df[['name','name_similarity']].sort_values(by=['name_similarity'], ascending=False)[:2].reset_index(drop=True))
-                #result_df.sort_values(by=['name_similarity'], ascending=False)
+                st.write("Ooo... You matched with one of the sanctioned entities. Further investigation required (score > 85%):")
+                st.dataframe(result_df[['name', 'name_similarity']].sort_values(by=['name_similarity'], ascending=False).reset_index(drop=True))
             else:
-                st.write("Congratulations!! You are not part of any Sanctioned List.")
+                st.write("Congratulations! You are not part of any sanctioned list.")
+            
+            # Reset the "Enter Your Name" field for next input
+            st.session_state.saved_name = ""
         else:
-            st.error("Please provide Party Name/Org to match.")
+            st.error("Please provide a name to match.")
 
 if __name__ == "__main__":
     main()
